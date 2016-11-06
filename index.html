@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en" ng-app="forget">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="css/index.css">
+    <script src="js/jquery.js"></script>
+    <script src="js/angular.js"></script>
+</head>
+<body ng-controller="thing">
+<div class="box">
+<div class="list-left">
+    <ul class="top-list">
+        <li>
+            <b>iCloud</b>
+            <span>&nbsp;提醒事项</span>
+            <div class="show"></div>
+            <div class="add" ng-click="add()"></div>
+        </li>
+        <li style="border-bottom-color:#31312F;">
+            <div class="clock"></div>
+            <span>已计划</span>
+        </li>
+    </ul>
+    <ul class="bottom-list">
+        <my-div ng-repeat="v in lists" ></my-div>
+    </ul>
+</div>
+<div class="list-right">
+    <div class="header">
+        <div class="search"></div>
+        <input type="text" placeholder="搜索所有提醒" ng-model="word">
+        <div class="xia"></div>
+        <span>|</span>
+        <div class="question"></div>
+    </div>
+    <div class="new-list">
+        <span class="left {{current.class}}">{{current.title}}</span>
+        <span class="right {{current.class}}" ng-click="show()">选项</span>
+        <div class="done-list">
+            <div class="done-con {{current.class}}">
+                <input type="text" value="{{current.title}}">
+                <h4>列表颜色</h4>
+                <ul class="color">
+                    <li ng-repeat="v in color" ng-class="current.class==v?current.class:active;" ng-click="xuan($index)">
+                        <div class="dot {{v}}"></div>
+                    </li>
+                </ul>
+                <div class="line"></div>
+                <div class="btn">
+                    <div class="delete" ng-click="dele(current.id);yincang()">删除</div>
+                    <div class="config" ng-click="yincang();xiugai(current.id)">完成</div>
+                    <span>|</span>
+                    <div class="cancel" ng-click="yincang()">取消</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="finish-list" ng-click="xs();prevent($event)">
+        <div></div>
+        <div class="finish"></div>
+        <span class="two">已完成:{{chang()}}项</span>
+        <span class="done {{current.class}}" ng-click="all();prevent($event)">清除已完成事项</span>
+    </div>
+    <!--<div class="date">2016年10月18日 星期二</div>-->
+    <ul class="thing-done">
+        <li ng-repeat="v in current.todos|filter:{state:1}|filter:{title:word}" ng-class="current.class">
+            <div class="bortop"></div>
+            <div class="borbottom"></div>
+            <div class="dingwei"></div>
+            <div class="dot" ng-click="v.state=0;prevent($event)">
+                <div class="nei"></div>
+            </div>
+            <div class="con">
+                <input type="text" ng-model="v.title" ng-focus="tianjia($index)" ng-blur="reduce($index)">
+                <div class="delete" ng-click="delete(v.id);prevent($event)">删除</div>
+            </div>
+        </li>
+    </ul>
+    <ul class="thing-will">
+        <li ng-repeat="v in current.todos|filter:{state:0}|filter:{title:word}" ng-class="current.class">
+            <div class="dingwei"></div>
+            <div class="bortop"></div>
+            <div class="borbottom"></div>
+            <div class="dot" ng-click="v.state=1;prevent($event)"><span></span></div>
+            <div class="con">
+                <input type="text" ng-model="v.title" ng-focus="tj($index)" ng-blur="quit($index)">
+                <div class="delete" ng-click="delete(current.id);prevent($event)">删除</div>
+            </div>
+        </li>
+    </ul>
+    <div class="jia {{current.class}}">
+        <div class="dingwei"></div>
+        <div class="bortop"></div>
+        <div class="borbottom"></div>
+        <input type="text" ng-model="tem" ng-blur="jia()" class="shuru">
+    </div>
+    <div class="new" ng-click="xianshi()">新项目...</div>
+</div>
+</div>
+</body>
+<script>
+    var app=angular.module('forget',[]);
+    app.controller('thing',['$scope',function($scope){
+        $scope.color=['color1','color2','color3','color4','color5','color6','color7'];
+        $scope.lists=[{id:1,title:'默认',class:$scope.color[0],todos:[]},
+                {id:2,title:'新列表1',class:$scope.color[1],
+                    todos:[{id:1,title:'吃饭',state:1},{id:2,title:"上课",state:0},{id:3,title:"打豆豆",state:0}]}];
+        $scope.prevent=function(e){
+            e.stopPropagation();
+            e.preventDefault();
+        }
+        $scope.add=function(){
+            var item={};
+            item.title="新列表"+($scope.lists.length+1);
+            item.class=$scope.color[($scope.lists.length+1)%7];
+            item.todos=[];
+            var max=-Infinity;
+            if($scope.lists.length!==0){
+                $scope.lists.forEach(function(v,i){
+                    if(v.id>max){
+                        max=v.id;
+                    }
+                })
+                item.id=max+1;
+            }else{
+                item.id=$scope.lists.length+1;
+            }
+            $scope.lists.push(item);
+        }
+        $scope.current=$scope.lists[0];
+        $scope.setcurrent=function(v){
+             $scope.current=v;
+        }
+        $scope.jia=function(){
+             var item={};
+             item.title=$scope.tem;
+             $scope.tem='';
+             item.state=0;
+             var max=-Infinity;
+            if($scope.current.todos.length!==0){
+             $scope.current.todos.forEach(function(v,i){
+                if(v.id>max){
+                    max=v.id;
+                }
+            })
+                item.id=max+1;
+                $scope.current.todos.push(item);
+            }else{
+                item.id=$scope.current.length+1;
+                $scope.current.todos.push(item);
+            }
+            $('.jia').removeClass('active');
+        }
+        $scope.delete=function(id){
+            $scope.current.todos=$scope.current.todos.filter(function(v,i){
+                return v.id!==id;
+            })
+        }
+        $scope.chang=function () {
+            $scope.done=[];
+            $scope.current.todos.forEach(function(v,i){
+                if(v.state==1){
+                    $scope.done.push(v)
+                }
+            })
+            return $scope.done.length;
+        }
+        $scope.show=function(){
+            $('.new-list .right').on('mousedown',false);
+            $('.done-list').toggleClass('active');
+        }
+        $scope.xuan=function(index){
+          $scope.color.forEach(function(v,i){
+              $('.done-list .color li').removeClass(v);
+              $('.done-list .color li').eq(index).addClass($scope.color[index]);
+              $scope.current.class=$scope.color[index];
+          })
+        }
+        $scope.yincang=function(){
+            $('.done-list').removeClass('active');
+        }
+        $scope.xiugai=function(id){
+            var v=$('.done-con input').blur().val();
+            $scope.current.title=v;
+        }
+        $scope.tianjia=function(index){
+            $('.thing-done').find('li').eq(index).find('.dingwei').addClass($scope.current.class);
+            $('.thing-done').find('li').eq(index).find('.bortop').addClass($scope.current.class);
+            $('.thing-done').find('li').eq(index).find('.borbottom').addClass($scope.current.class);
+        }
+        $scope.tj=function(index){
+            $('.thing-will').find('li').eq(index).find('.dingwei').addClass($scope.current.class);
+            $('.thing-will').find('li').eq(index).find('.bortop').addClass($scope.current.class);
+            $('.thing-will').find('li').eq(index).find('.borbottom').addClass($scope.current.class);
+        }
+        $scope.quit=function(index){
+            $('.thing-will').find('li').eq(index).find('.dingwei').removeClass($scope.current.class);
+            $('.thing-will').find('li').eq(index).find('.bortop').removeClass($scope.current.class);
+            $('.thing-will').find('li').eq(index).find('.borbottom').removeClass($scope.current.class);
+        }
+        $scope.reduce=function(index){
+            $('.thing-done').find('li').eq(index).find('.dingwei').removeClass($scope.current.class);
+            $('.thing-done').find('li').eq(index).find('.bortop').removeClass($scope.current.class);
+            $('.thing-done').find('li').eq(index).find('.borbottom').removeClass($scope.current.class);
+        }
+        $scope.xianshi=function(){
+            $('.jia').addClass('active');
+        }
+        $scope.dele=function(id){
+            $scope.lists=$scope.lists.filter(function(v,i){
+                if(id==1){
+                    return;
+                }
+                else{
+                    return v.id!==id;
+                }
+            })
+            $scope.current=$scope.lists[0];
+        }
+        $scope.all=function(){
+            $scope.current.todos=$scope.current.todos.filter(function(v,i){
+               return v.state!=1;
+            })
+        }
+        $scope.xs=function(){
+//            $('.finish-list').on('mousedown',false);
+            $('.thing-done').toggleClass('active');
+        }
+    }])
+    app.directive('myDiv',function(){
+        return{
+            restrict:"AE",
+            template:'<li class="{{v.class}}" ng-click="setcurrent(v)" data-id="{{v.id}}"><div></div><div class="dot"></div> <span><b>{{v.title}}</b><input type="text" ng-model="v.title"> <div class="wlan"></div></span></li>',
+            replace:true,
+            link:function(scope,el){
+                $(el).closest('ul').on('dblclick','li',function(){
+                    $(this).addClass('active');
+                    var input=$(this).find('input');
+                    input.val(input.val()).focus();
+                })
+                $(el).closest('ul').on('click','li',function(){
+                    var id=parseInt($(this).attr('data-id'));
+                    $(el).closest('ul').find('.show').removeClass('active show')
+                    $(this).addClass('show');
+                })
+                $(document).on('keyup',function(e){
+                    if(e.keyCode===46){
+                        var id=parseInt($(el).closest('ul').find('.show').attr('data-id'));
+                        scope.$apply(function(){
+                              scope.lists=scope.lists.filter(function(v){
+                                  return v.id!==id;
+                              })
+                        })
+                    }
+                })
+            }
+        }
+    })
+</script>
+</html>
